@@ -192,6 +192,7 @@ function findRefs(text) {
 
 function cleanSqlLine(line) {
   const stripped = line.trim()
+  if (START_RE.test(stripped)) return normalize(line).replace(/\s+$/, "")
   return isSqlComment(stripped) || isHeader(stripped) ? toComment(stripped) : normalize(line).replace(/\s+$/, "")
 }
 
