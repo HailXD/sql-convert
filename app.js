@@ -55,12 +55,12 @@ function parseStatements(text) {
   for (let i = 0; i < lines.length;) {
     const line = lines[i].replace(/\s+$/, "")
     if (!line.trim()) {
-      comments.push("")
+      if (comments.length) comments.push("")
       i += 1
       continue
     }
     if (!START_RE.test(line)) {
-      comments.push(toComment(line))
+      if (isSqlComment(line)) comments.push(toComment(line))
       i += 1
       continue
     }
@@ -185,6 +185,11 @@ function findRefs(text) {
 function cleanSqlLine(line) {
   const stripped = line.trim()
   return stripped.startsWith("–") || stripped.startsWith("—") ? toComment(stripped) : normalize(line).replace(/\s+$/, "")
+}
+
+function isSqlComment(line) {
+  const stripped = normalize(line).trim()
+  return stripped.startsWith("--") || stripped.startsWith("/*") || stripped.startsWith("*/") || stripped.startsWith("*") || stripped.startsWith("–") || stripped.startsWith("—")
 }
 
 function toComment(line) {
