@@ -243,12 +243,20 @@ function clearOutput(summary) {
   summaryEl.textContent = summary
   createPreviewEl.textContent = "Preview will appear here."
   dropPreviewEl.textContent = "Preview will appear here."
+  resetDownload(createDownloadEl, "createUrl")
+  resetDownload(dropDownloadEl, "dropUrl")
   createDownloadEl.classList.add("disabled")
   dropDownloadEl.classList.add("disabled")
 }
 
 function setMessage(text) {
   messageEl.textContent = text
+}
+
+function resetDownload(link, key) {
+  if (state[key]) URL.revokeObjectURL(state[key])
+  state[key] = ""
+  link.removeAttribute("href")
 }
 
 let sourceEl
