@@ -280,6 +280,35 @@ function resetDownload(link, key) {
   link.removeAttribute("href")
 }
 
+function isSelectAll(event) {
+  return (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "a"
+}
+
+function findPreview(node) {
+  const el = node?.nodeType === 1 ? node : node?.parentElement
+  return el?.closest?.("pre[id$='-preview']") || null
+}
+
+function getSelectedPreview() {
+  const active = findPreview(document.activeElement)
+  if (active) return active
+  const selection = window.getSelection()
+  if (!selection.rangeCount) return null
+  return findPreview(selection.anchorNode) || findPreview(selection.focusNode) || findPreview(selection.getRangeAt(0).commonAncestorContainer)
+}
+
+function handleSelectAll(event) {
+  if (!isSelectAll(event)) return
+  const previewEl = getSelectedPreview()
+  if (!previewEl) return
+  event.preventDefault()
+  const range = document.createRange()
+  const selection = window.getSelection()
+  range.selectNodeContents(previewEl)
+  selection.removeAllRanges()
+  selection.addRange(range)
+}
+
 let sourceEl
 let summaryEl
 let messageEl
@@ -300,6 +329,9 @@ if (typeof document !== "undefined") {
   createDownloadEl = $("#download-create")
   dropDownloadEl = $("#download-drop")
   refreshDownloadEl = $("#download-refresh")
+  createPreviewEl.tabIndex = 0
+  dropPreviewEl.tabIndex = 0
+  refreshPreviewEl.tabIndex = 0
 
   $("#convert").addEventListener("click", () => convert(sourceEl.value))
   $("#clear").addEventListener("click", clearAll)
@@ -311,6 +343,7 @@ if (typeof document !== "undefined") {
     convert(sourceEl.value)
     setMessage(`Loaded ${file.name}`)
   })
+  document.addEventListener("keydown", handleSelectAll)
 
   loadSample()
 }
