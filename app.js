@@ -5,6 +5,7 @@ const INSERT_RE = /^\s*INSERT\s+INTO\s+([\[\]\w]+)/i
 const SELECT_RE = /^\s*SELECT\s+\*\s+FROM\s+([\[\]\w]+)/i
 const REF_RE = /\bREFERENCES\s+([\[\]\w]+)/gi
 const HEADER_RE = /^(?=.*[A-Z])[A-Z0-9][A-Z0-9_ /&-]*$/
+const HEADER_SKIP_RE = /^(VALUES)$/i
 const SMART_RE = /[\u2018\u2019\u201c\u201d\u00a0]/g
 const SMART_MAP = { "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u00a0": " " }
 const state = { createUrl: "", dropUrl: "", refreshUrl: "" }
@@ -202,7 +203,8 @@ function isSqlComment(line) {
 }
 
 function isHeader(line) {
-  return HEADER_RE.test(normalize(line).trim())
+  const text = normalize(line).trim()
+  return !HEADER_SKIP_RE.test(text) && HEADER_RE.test(text)
 }
 
 function toComment(line) {
