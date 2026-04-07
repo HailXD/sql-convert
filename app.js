@@ -71,6 +71,10 @@ function parseStatements(text) {
     }
     const block = [cleanSqlLine(line)]
     i += 1
+    if (line.includes(";")) {
+      statements.push(makeStatement(comments.splice(0), block))
+      continue
+    }
     while (i < lines.length) {
       const nextLine = lines[i].replace(/\s+$/, "")
       if (!nextLine.trim()) {
