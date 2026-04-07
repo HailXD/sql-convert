@@ -6,34 +6,37 @@ const SELECT_RE = /^\s*SELECT\s+\*\s+FROM\s+([\[\]\w]+)/i
 const REF_RE = /\bREFERENCES\s+([\[\]\w]+)/gi
 const SMART_RE = /[\u2018\u2019\u201c\u201d\u00a0]/g
 const SMART_MAP = { "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u00a0": " " }
-const state = { createUrl: "", dropUrl: "" }
+const state = { createUrl: "", dropUrl: "", refreshUrl: "" }
 
 function convertText(raw) {
   const text = normalize(raw)
   if (!text.trim()) {
-    return { createSql: "", dropSql: "", tableCount: 0 }
+    return { createSql: "", dropSql: "", refreshSql: "", tableCount: 0 }
   }
   const { statements, tailComments } = parseStatements(text)
   const { preamble, bundles, rawOrder } = buildBundles(statements)
   const createOrder = topoSort(bundles, rawOrder)
   const createSql = renderCreate(preamble, bundles, createOrder, tailComments)
   const dropSql = renderDrop(createOrder, bundles)
+  const refreshSql = renderRefresh(dropSql, createSql)
   const tableCount = createOrder.filter(name => bundles[name].hasCreate).length
-  return { createSql, dropSql, tableCount }
+  return { createSql, dropSql, refreshSql, tableCount }
 }
 
 function convert(raw) {
-  const { createSql, dropSql, tableCount } = convertText(raw)
+  const { createSql, dropSql, refreshSql, tableCount } = convertText(raw)
   if (!tableCount) {
     clearOutput("No input loaded")
     return
   }
   createPreviewEl.textContent = createSql
   dropPreviewEl.textContent = dropSql
+  refreshPreviewEl.textContent = refreshSql
   setDownload(createDownloadEl, "create.sql", createSql, "createUrl")
   setDownload(dropDownloadEl, "drop.sql", dropSql, "dropUrl")
+  setDownload(refreshDownloadEl, "refresh.sql", refreshSql, "refreshUrl")
   summaryEl.textContent = `${tableCount} tables ready`
-  setMessage(`create.sql ${createSql.length} chars | drop.sql ${dropSql.length} chars`)
+  setMessage(`create.sql ${createSql.length} chars | drop.sql ${dropSql.length} chars | refresh.sql ${refreshSql.length} chars`)
 }
 
 async function loadSample() {
@@ -174,6 +177,10 @@ function renderDrop(createOrder, bundles) {
   return `${lines.join("\n").trim()}\n`
 }
 
+function renderRefresh(dropSql, createSql) {
+  return `${dropSql.trim()}\n\n${createSql.trim()}\n`
+}
+
 function renderPart(comments, text) {
   return comments.length ? [...comments, "", text].join("\n").trim() : text
 }
@@ -248,10 +255,13 @@ function clearOutput(summary) {
   summaryEl.textContent = summary
   createPreviewEl.textContent = "Preview will appear here."
   dropPreviewEl.textContent = "Preview will appear here."
+  refreshPreviewEl.textContent = "Preview will appear here."
   resetDownload(createDownloadEl, "createUrl")
   resetDownload(dropDownloadEl, "dropUrl")
+  resetDownload(refreshDownloadEl, "refreshUrl")
   createDownloadEl.classList.add("disabled")
   dropDownloadEl.classList.add("disabled")
+  refreshDownloadEl.classList.add("disabled")
 }
 
 function setMessage(text) {
@@ -269,8 +279,10 @@ let summaryEl
 let messageEl
 let createPreviewEl
 let dropPreviewEl
+let refreshPreviewEl
 let createDownloadEl
 let dropDownloadEl
+let refreshDownloadEl
 
 if (typeof document !== "undefined") {
   sourceEl = $("#source")
@@ -278,8 +290,10 @@ if (typeof document !== "undefined") {
   messageEl = $("#message")
   createPreviewEl = $("#create-preview")
   dropPreviewEl = $("#drop-preview")
+  refreshPreviewEl = $("#refresh-preview")
   createDownloadEl = $("#download-create")
   dropDownloadEl = $("#download-drop")
+  refreshDownloadEl = $("#download-refresh")
 
   $("#convert").addEventListener("click", () => convert(sourceEl.value))
   $("#clear").addEventListener("click", clearAll)
