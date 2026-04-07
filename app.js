@@ -4,6 +4,7 @@ const CREATE_RE = /^\s*CREATE\s+TABLE\s+([\[\]\w]+)/i
 const INSERT_RE = /^\s*INSERT\s+INTO\s+([\[\]\w]+)/i
 const SELECT_RE = /^\s*SELECT\s+\*\s+FROM\s+([\[\]\w]+)/i
 const REF_RE = /\bREFERENCES\s+([\[\]\w]+)/gi
+const HEADER_RE = /^(?=.*[A-Z])[A-Z0-9][A-Z0-9_ /&-]*$/
 const SMART_RE = /[\u2018\u2019\u201c\u201d\u00a0]/g
 const SMART_MAP = { "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u00a0": " " }
 const state = { createUrl: "", dropUrl: "", refreshUrl: "" }
@@ -63,7 +64,7 @@ function parseStatements(text) {
       continue
     }
     if (!START_RE.test(line)) {
-      if (isSqlComment(line)) comments.push(toComment(line))
+      if (isSqlComment(line) || isHeader(line)) comments.push(toComment(line))
       i += 1
       continue
     }
@@ -191,12 +192,16 @@ function findRefs(text) {
 
 function cleanSqlLine(line) {
   const stripped = line.trim()
-  return stripped.startsWith("–") || stripped.startsWith("—") ? toComment(stripped) : normalize(line).replace(/\s+$/, "")
+  return isSqlComment(stripped) || isHeader(stripped) ? toComment(stripped) : normalize(line).replace(/\s+$/, "")
 }
 
 function isSqlComment(line) {
   const stripped = normalize(line).trim()
   return stripped.startsWith("--") || stripped.startsWith("/*") || stripped.startsWith("*/") || stripped.startsWith("*") || stripped.startsWith("–") || stripped.startsWith("—")
+}
+
+function isHeader(line) {
+  return HEADER_RE.test(normalize(line).trim())
 }
 
 function toComment(line) {
