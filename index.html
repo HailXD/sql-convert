@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL Stitcher</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Static SQL Converter</p>
+      <h1>Turn raw schema text into create and drop scripts</h1>
+      <p class="lede">Paste the draft, upload `raw.txt`, preview both outputs, then download `create.sql` and `drop.sql`.</p>
+    </section>
+
+    <section class="panel controls">
+      <div class="actions">
+        <label class="file">
+          <span>Open raw file</span>
+          <input id="file-input" type="file" accept=".txt,.sql,text/plain">
+        </label>
+        <button id="load-sample" type="button">Load raw.txt</button>
+        <button id="convert" type="button">Convert</button>
+        <button id="clear" type="button" class="ghost">Clear</button>
+      </div>
+      <textarea id="source" spellcheck="false" placeholder="Paste raw SQL draft here"></textarea>
+      <div class="status">
+        <span id="summary">No input loaded</span>
+        <span id="message"></span>
+      </div>
+    </section>
+
+    <section class="outputs">
+      <article class="panel output">
+        <header>
+          <div>
+            <p class="label">Output A</p>
+            <h2>create.sql</h2>
+          </div>
+          <a id="download-create" class="download disabled" download="create.sql">Download</a>
+        </header>
+        <pre id="create-preview">Preview will appear here.</pre>
+      </article>
+
+      <article class="panel output">
+        <header>
+          <div>
+            <p class="label">Output B</p>
+            <h2>drop.sql</h2>
+          </div>
+          <a id="download-drop" class="download disabled" download="drop.sql">Download</a>
+        </header>
+        <pre id="drop-preview">Preview will appear here.</pre>
+      </article>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
