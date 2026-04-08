@@ -173,14 +173,29 @@ function renderCreate(preamble, bundles, createOrder, tailComments) {
 }
 
 function renderDrop(createOrder, bundles) {
+  const names = createOrder.filter(table => bundles[table].hasCreate)
   const lines = []
-  for (const table of [...createOrder].reverse()) {
-    if (!bundles[table].hasCreate) continue
+  lines.push(...renderFkDrop(names))
+  for (const table of [...names].reverse()) {
     lines.push(`IF OBJECT_ID('${table}', 'U') IS NOT NULL`)
     lines.push(`DROP TABLE ${table};`)
     lines.push("")
   }
   return `${lines.join("\n").trim()}\n`
+}
+
+function renderFkDrop(names) {
+  if (!names.length) return []
+  const list = names.map(name => `N'${escapeSql(name)}'`).join(", ")
+  return [
+    "DECLARE @sql NVARCHAR(MAX) = N'';",
+    "SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(fk.parent_object_id)) + N'.' + QUOTENAME(OBJECT_NAME(fk.parent_object_id)) +",
+    "    N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';' + CHAR(10)",
+    "FROM sys.foreign_keys fk",
+    `WHERE OBJECT_NAME(fk.parent_object_id) IN (${list});`,
+    "IF @sql <> N'' EXEC sp_executesql @sql;",
+    ""
+  ]
 }
 
 function renderRefresh(dropSql, createSql) {
@@ -247,6 +262,10 @@ function trimLines(lines) {
 
 function normalize(text) {
   return text.replace(SMART_RE, char => SMART_MAP[char] || char)
+}
+
+function escapeSql(text) {
+  return text.replace(/'/g, "''")
 }
 
 function setDownload(link, name, text, key) {
