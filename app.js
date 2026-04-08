@@ -186,7 +186,7 @@ function renderDrop(createOrder, bundles) {
 
 function renderFkDrop(names) {
   if (!names.length) return []
-  const list = names.map(name => `N'${escapeSql(name)}'`).join(", ")
+  const list = names.map(name => `(N'${escapeSql(name)}')`).join(", ")
   return [
     "DECLARE @sql NVARCHAR(MAX) = N'';",
     `DECLARE @targets TABLE (name SYSNAME PRIMARY KEY); INSERT INTO @targets (name) VALUES (${list});`,
