@@ -189,7 +189,7 @@ function renderFkDrop(names) {
   const list = names.map(name => `(N'${escapeSql(name)}')`).join(", ")
   return [
     "DECLARE @sql NVARCHAR(MAX) = N'';",
-    `DECLARE @targets TABLE (name SYSNAME PRIMARY KEY); INSERT INTO @targets (name) VALUES (${list});`,
+    `DECLARE @targets TABLE (name SYSNAME PRIMARY KEY); INSERT INTO @targets (name) VALUES ${list};`,
     "SELECT @sql += N'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(fk.parent_object_id)) + N'.' + QUOTENAME(OBJECT_NAME(fk.parent_object_id)) +",
     "    N' DROP CONSTRAINT ' + QUOTENAME(fk.name) + N';' + CHAR(10)",
     "FROM sys.foreign_keys fk",
